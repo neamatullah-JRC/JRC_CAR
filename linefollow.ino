@@ -37,6 +37,9 @@ void loop() {
   if ((digitalRead(R_S) == 1) && (digitalRead(L_S) == 1))
   {
     Stop();
+    delay(5000);
+    forword();
+    delay(2000);
   }
 
 
