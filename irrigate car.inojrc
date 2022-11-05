@@ -1,0 +1,105 @@
+#include <SoftwareSerial.h>
+SoftwareSerial BT_Serial(2, 3); // RX, TX
+
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27,16,2);
+
+#define in1 9 //Motor1  L298 Pin in1 
+#define in2 8 //Motor1  L298 Pin in1 
+#define in3 7 //Motor2  L298 Pin in1 
+#define in4 6 //Motor2  L298 Pin in1 
+#define pump 10 // pump
+
+int bt_ir_data;
+
+void setup()
+{
+  pinMode(in1, OUTPUT); // declare as output for L298 Pin in1
+  pinMode(in2, OUTPUT); // declare as output for L298 Pin in2
+  pinMode(in3, OUTPUT); // declare as output for L298 Pin in3
+  pinMode(in4, OUTPUT); // declare as output for L298 Pin in4
+  pinMode(pump, OUTPUT); // declare as output for pump pin
+
+
+  Serial.begin(9600); // start serial communication at 9600bps
+  BT_Serial.begin(9600);
+  lcd.init();
+  // Print a message to the LCD.
+  lcd.backlight();
+  lcd.setCursor(7,0);
+  lcd.print("JRC");
+  lcd.setCursor(6,1);
+  lcd.print("BT CAR");
+
+}
+
+void loop()
+{
+
+  
+
+if(BT_Serial.available() > 0){  //if some date is sent, reads it and saves in state     
+bt_ir_data = BT_Serial.read(); 
+Serial.println(bt_ir_data);     
+     
+}
+
+  Serial.println(bt_ir_data);
+if(bt_ir_data == 1){forword(); }  // if the bt_data is '1' the DC motor will go forward
+else if(bt_ir_data == 2){backword();}  // if the bt_data is '2' the motor will Reverse
+else if(bt_ir_data == 3){turnLeft();}  // if the bt_data is '3' the motor will turn left
+else if(bt_ir_data == 4){turnRight();} // if the bt_data is '4' the motor will turn right
+else if(bt_ir_data == 5){Stop(); }     // if the bt_data '5' the motor will Stop
+else if(bt_ir_data == 9){digitalWrite(pump,LOW);} 
+else if(bt_ir_data == 10){digitalWrite(pump,HIGH);} 
+  
+}
+
+
+
+void forword(){  //forword
+
+digitalWrite(in1, HIGH); //Right Motor forword Pin 
+digitalWrite(in2, LOW);  //Right Motor backword Pin 
+digitalWrite(in3, LOW);  //Left Motor backword Pin 
+digitalWrite(in4, HIGH); //Left Motor forword Pin 
+
+ 
+}
+
+void backword(){ //backword
+
+digitalWrite(in1, LOW);  //Right Motor forword Pin 
+digitalWrite(in2, HIGH); //Right Motor backword Pin 
+digitalWrite(in3, HIGH); //Left Motor backword Pin 
+digitalWrite(in4, LOW);  //Left Motor forword Pin 
+
+}
+
+void turnRight(){ //turnRight
+
+digitalWrite(in1, LOW);  //Right Motor forword Pin 
+digitalWrite(in2, HIGH); //Right Motor backword Pin  
+digitalWrite(in3, LOW);  //Left Motor backword Pin 
+digitalWrite(in4, HIGH); //Left Motor forword Pin 
+
+  
+}
+void turnLeft(){ //turnRight
+
+
+digitalWrite(in1, HIGH);  //Right Motor forword Pin 
+digitalWrite(in2, LOW); //Right Motor backword Pin  
+digitalWrite(in3, HIGH);  //Left Motor backword Pin 
+digitalWrite(in4, LOW); //Left Motor forword Pin 
+
+}
+void Stop(){ //stop
+
+digitalWrite(in1, LOW); //Right Motor forword Pin 
+digitalWrite(in2, LOW); //Right Motor backword Pin 
+digitalWrite(in3, LOW); //Left Motor backword Pin 
+digitalWrite(in4, LOW); //Left Motor forword Pin 
+}
