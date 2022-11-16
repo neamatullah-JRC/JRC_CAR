@@ -1,0 +1,160 @@
+#include <SoftwareSerial.h>
+SoftwareSerial BT_Serial(2, 3); // RX, TX
+#include <Servo.h>
+Servo myservo;
+
+int pos = 0;
+boolean fire = false;
+
+#define Forward_S 9 //forward sensor
+#define Left_S 8     // left sensor
+#define Right_S 10      // right sensor
+
+
+#define in1 7 //Motor1  L298 Pin in1 
+#define in2 6 //Motor1  L298 Pin in1 
+#define in3 5 //Motor2  L298 Pin in1 
+#define in4 4 //Motor2  L298 Pin in1 
+#define pump 12 // pump
+int bt_ir_data;
+
+
+void setup()
+{
+  Serial.begin(9600);
+  BT_Serial.begin(9600);
+  pinMode(Left_S , INPUT_PULLUP);
+  pinMode(Right_S , INPUT_PULLUP);
+  pinMode(Forward_S , INPUT_PULLUP);
+  pinMode(in1, OUTPUT); // declare as output for L298 Pin in1
+  pinMode(in2, OUTPUT); // declare as output for L298 Pin in2
+  pinMode(in3, OUTPUT); // declare as output for L298 Pin in3
+  pinMode(in4, OUTPUT); // declare as output for L298 Pin in4
+  pinMode(pump, OUTPUT); // declare as output for pump pin
+  myservo.attach(11);
+  myservo.write(90);
+
+}
+
+
+
+void put_off_fire()
+
+{
+
+  delay (500);
+  Stop();
+  digitalWrite(pump, HIGH);
+  delay(500);
+  for (pos = 50; pos <= 130; pos += 1) {
+    myservo.write(pos);
+    delay(10);
+  }
+
+  for (pos = 130; pos >= 50; pos -= 1) {
+    myservo.write(pos);
+    delay(10);
+  }
+
+  digitalWrite(pump, LOW);
+  myservo.write(90);
+  fire = false;
+
+}
+
+
+
+void loop()
+
+{
+
+
+  if (BT_Serial.available() > 0) { //if some date is sent, reads it and saves in state
+    bt_ir_data = BT_Serial.read();
+    Serial.println(bt_ir_data);
+  } 
+  if (bt_ir_data == 1) {
+    forword();  // if the bt_data is '1' the DC motor will go forward
+  }
+  else if (bt_ir_data == 2) {
+    backword(); // if the bt_data is '2' the motor will Reverse
+  }
+  else if (bt_ir_data == 3) {
+    turnLeft(); // if the bt_data is '3' the motor will turn left
+  }
+  else if (bt_ir_data == 4) {
+    turnRight(); // if the bt_data is '4' the motor will turn right
+  }
+  else if (bt_ir_data == 5) {
+    Stop();  // if the bt_data '5' the motor will Stop
+  }
+
+
+  myservo.write(90);
+if (digitalRead(Forward_S) == 0) //If Fire is straight ahead
+  {
+    forword();
+    fire = true;
+  }
+  else if (digitalRead(Left_S) == 0) //If Fire is to the left
+ {
+    turnLeft();
+  }
+
+  else if (digitalRead(Right_S) == 0) //If Fire is to the right
+  {
+    turnRight();
+  }
+  delay(300); //Slow down the speed of robot
+  while (fire == true)
+  {
+    put_off_fire();
+  }
+
+}
+
+
+void forword() { //forword
+
+  digitalWrite(in1, HIGH); //Right Motor forword Pin
+  digitalWrite(in2, LOW);  //Right Motor backword Pin
+  digitalWrite(in3, LOW);  //Left Motor backword Pin
+  digitalWrite(in4, HIGH); //Left Motor forword Pin
+
+
+}
+
+void backword() { //backword
+
+  digitalWrite(in1, LOW);  //Right Motor forword Pin
+  digitalWrite(in2, HIGH); //Right Motor backword Pin
+  digitalWrite(in3, HIGH); //Left Motor backword Pin
+  digitalWrite(in4, LOW);  //Left Motor forword Pin
+
+}
+
+void turnRight() { //turnRight
+
+  digitalWrite(in1, LOW);  //Right Motor forword Pin
+  digitalWrite(in2, HIGH); //Right Motor backword Pin
+  digitalWrite(in3, LOW);  //Left Motor backword Pin
+  digitalWrite(in4, HIGH); //Left Motor forword Pin
+
+
+}
+void turnLeft() { //turnRight
+
+
+  digitalWrite(in1, HIGH);  //Right Motor forword Pin
+  digitalWrite(in2, LOW); //Right Motor backword Pin
+  digitalWrite(in3, HIGH);  //Left Motor backword Pin
+  digitalWrite(in4, LOW); //Left Motor forword Pin
+
+}
+void Stop() { //stop
+
+  digitalWrite(in1, LOW); //Right Motor forword Pin
+  digitalWrite(in2, LOW); //Right Motor backword Pin
+  digitalWrite(in3, LOW); //Left Motor backword Pin
+  digitalWrite(in4, LOW); //Left Motor forword Pin
+}
